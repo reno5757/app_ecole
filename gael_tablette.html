@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Grammar Quest</title>
+
+<style>
+:root {
+  --blue: #38bdf8;
+  --bg: #020617;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle, #0f172a, var(--bg));
+  color: white;
+}
+
+.game {
+  max-width: 760px;
+  margin: auto;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------- START SCREEN -------- */
+
+.start {
+  text-align: center;
+  margin: auto;
+}
+
+.start h1 {
+  color: var(--blue);
+  font-size: clamp(32px, 5vw, 44px);
+}
+
+.start button {
+  margin-top: 30px;
+  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+  border: none;
+  border-radius: 22px;
+  padding: 22px 40px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #020617;
+  cursor: pointer;
+}
+
+/* -------- GAME UI -------- */
+
+h1 {
+  text-align: center;
+  color: var(--blue);
+  font-size: clamp(26px, 4vw, 36px);
+  margin: 5px 0 15px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(16px, 2.5vw, 20px);
+  margin-bottom: 14px;
+}
+
+.phrase {
+  background: #020617;
+  border: 3px solid var(--blue);
+  border-radius: 18px;
+  padding: 20px;
+  font-size: clamp(22px, 3.5vw, 30px);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+button.answer {
+  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+  border: none;
+  border-radius: 18px;
+  padding: 18px;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: bold;
+  color: #020617;
+  cursor: pointer;
+  min-height: 64px;
+}
+
+button.answer:active {
+  transform: scale(0.97);
+}
+
+.feedback {
+  text-align: center;
+  font-size: clamp(20px, 3vw, 26px);
+  margin-top: 18px;
+  min-height: 34px;
+}
+
+.correct { color: #4ade80; }
+.wrong { color: #f87171; }
+
+.end {
+  text-align: center;
+  margin: auto;
+  font-size: clamp(22px, 3vw, 28px);
+}
+
+.restart {
+  margin-top: 25px;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  border: none;
+  border-radius: 20px;
+  padding: 18px 30px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #052e16;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game" id="game">
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="start">
+    <h1>🎮 GRAMMAR QUEST</h1>
+    <p style="font-size:22px;">Appuie pour jouer</p>
+    <button onclick="startFromTouch()">▶️ JOUER</button>
+  </div>
+
+  <!-- GAME UI -->
+  <div id="gameUI" style="display:none;">
+    <h1>🎮 GRAMMAR QUEST</h1>
+
+    <div class="top">
+      <div id="lives">❤️❤️❤️</div>
+      <div id="counter">1 / 50</div>
+      <div id="score">⭐ 0</div>
+    </div>
+
+    <div class="phrase" id="phrase"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+</div>
+
+<!-- SOUNDS -->
+<audio id="goodSound" src="data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YUwAAAB//v/+//7//v/+//7//v/+//7//v/+"></audio>
+<audio id="badSound"  src="data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YUwAAAD+/f79/v3+/f79/v3+"></audio>
+<audio id="endSound"  src="data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YUwAAAD+/v7+/v7+/v7+"></audio>
+
+<script>
+/* ---------- QUESTIONS (60 uniques) ---------- */
+
+const baseQuestions = [
+ ["Marie a ____ les pommes.", "mangé"],
+ ["Les pommes que Marie a ____.", "mangées"],
+ ["Paul a ____ son sac.", "préparé"],
+ ["Le sac que Paul a ____.", "préparé"],
+ ["Les lettres que Julie a ____.", "écrites"],
+ ["Julie a ____ des lettres.", "écrit"],
+ ["Ils sont ____ à l’école.", "arrivés"],
+ ["Elles sont ____ ensemble.", "venues"],
+ ["Lucas a ____ ses devoirs.", "terminé"],
+ ["Les devoirs que Lucas a ____.", "terminés"],
+ ["Emma a ____ sa chambre.", "rangé"],
+ ["La chambre qu’Emma a ____.", "rangée"],
+ ["Ils ont ____ le match.", "gagné"],
+ ["Les matchs qu’ils ont ____.", "gagnés"],
+ ["Elle a ____ une histoire.", "raconté"],
+ ["Les histoires qu’elle a ____.", "racontées"],
+ ["Nous sommes ____ très tôt.", "partis"],
+ ["Elles sont ____ fatiguées.", "devenues"],
+ ["Il a ____ une erreur.", "fait"],
+ ["Les erreurs qu’il a ____.", "faites"],
+ ["Les cadeaux que Léa a ____.", "ouverts"],
+ ["Léa a ____ les cadeaux.", "ouvert"],
+ ["Ils ont ____ la porte.", "fermée"],
+ ["La porte qu’ils ont ____.", "fermée"],
+ ["Elle a ____ la chanson.", "chantée"],
+ ["La chanson qu’elle a ____.", "chantée"],
+ ["Ils ont ____ leurs affaires.", "préparées"],
+ ["Les affaires qu’ils ont ____.", "préparées"],
+ ["Il est ____ en retard.", "arrivé"],
+ ["Elles sont ____ en avance.", "arrivées"],
+ ["Paul a ____ un dessin.", "fait"],
+ ["Le dessin que Paul a ____.", "fait"],
+ ["Elle a ____ une tarte.", "préparée"],
+ ["La tarte qu’elle a ____.", "préparée"],
+ ["Ils ont ____ le chemin.", "trouvé"],
+ ["Le chemin qu’ils ont ____.", "trouvé"],
+ ["Elle est ____ à la maison.", "rentrée"],
+ ["Ils sont ____ du bus.", "descendus"],
+ ["Elle a ____ ses clés.", "perdues"],
+ ["Les clés qu’elle a ____.", "perdues"],
+ ["Il a ____ un cadeau.", "reçu"],
+ ["Le cadeau qu’il a ____.", "reçu"],
+ ["Ils ont ____ leurs erreurs.", "corrigées"],
+ ["Les erreurs qu’ils ont ____.", "corrigées"],
+ ["Elle est ____ très vite.", "partie"],
+ ["Nous avons ____ le film.", "regardé"],
+ ["Le film que nous avons ____.", "regardé"],
+ ["Elle a ____ la porte.", "ouverte"],
+ ["La porte qu’elle a ____.", "ouverte"],
+ ["Ils sont ____ contents.", "restés"],
+ ["Elle a ____ son manteau.", "mis"],
+ ["Le manteau qu’elle a ____.", "mis"],
+ ["Ils ont ____ la leçon.", "apprise"],
+ ["La leçon qu’ils ont ____.", "apprise"],
+ ["Elle est ____ malade.", "tombée"]
+];
+
+/* ---------- GAME LOGIC ---------- */
+
+function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
+
+function variants(correct){
+  const base = correct.replace(/e?s?$/, "");
+  return shuffle([base, base+"e", base+"s", base+"es"]).slice(0,4);
+}
+
+function buildQuestions(){
+  return shuffle(baseQuestions)
+    .slice(0,50)
+    .map(([phrase,correct])=>({
+      phrase,
+      correct,
+      choices: shuffle(variants(correct))
+    }));
+}
+
+let questions, index, lives, score;
+
+const phraseEl = document.getElementById("phrase");
+const answersEl = document.getElementById("answers");
+const feedbackEl = document.getElementById("feedback");
+
+function unlockAudio(){
+  ["goodSound","badSound","endSound"].forEach(id=>{
+    const a=document.getElementById(id);
+    a.play().then(()=>{a.pause();a.currentTime=0;}).catch(()=>{});
+  });
+}
+
+function startFromTouch(){
+  unlockAudio();
+  document.getElementById("startScreen").style.display="none";
+  document.getElementById("gameUI").style.display="block";
+  startGame();
+}
+
+function startGame(){
+  questions = buildQuestions();
+  index = 0;
+  lives = 3;
+  score = 0;
+  load();
+}
+
+function load(){
+  if(index>=50 || lives<=0){ end(); return; }
+  const q = questions[index];
+  phraseEl.textContent = q.phrase;
+  answersEl.innerHTML="";
+  feedbackEl.textContent="";
+  document.getElementById("lives").textContent="❤️".repeat(lives);
+  document.getElementById("score").textContent="⭐ "+score;
+  document.getElementById("counter").textContent=(index+1)+" / 50";
+
+  q.choices.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="answer";
+    b.textContent=c;
+    b.onclick=()=>answer(c);
+    answersEl.appendChild(b);
+  });
+}
+
+function answer(c){
+  const q=questions[index];
+  if(c===q.correct){
+    score+=10;
+    feedbackEl.textContent="✅ Bonne réponse !";
+    feedbackEl.className="feedback correct";
+    document.getElementById("goodSound").play();
+  } else {
+    lives--;
+    feedbackEl.textContent="❌ Mauvaise réponse !";
+    feedbackEl.className="feedback wrong";
+    document.getElementById("badSound").play();
+  }
+  index++;
+  setTimeout(load, 1100);
+}
+
+function end(){
+  document.getElementById("endSound").play();
+  document.getElementById("game").innerHTML=`
+    <div class="end">
+      <h1>🏁 FIN DE PARTIE</h1>
+      <p>Score final : <strong>${score}</strong></p>
+      <p>${score>=400?"🌟 Excellent joueur !":"💪 Continue !"}</p>
+      <button class="restart" onclick="location.reload()">🔄 Recommencer</button>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
+
